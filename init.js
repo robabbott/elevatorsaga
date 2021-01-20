@@ -6,9 +6,9 @@
       elevators[e].on('idle', function () {
         getNextPerson(this);
       }).on('floor_button_pressed', function (floorNum) {
-        const pressedFloors = this.getPressedFloors();
-        const nextFloor = pressedFloors.length ? pressedFloors[0] : floorNum;
-        this.goToFloor(nextFloor);
+        goToNextFloor(this, floorNum);
+      }).on('passing_floor', function (floorNum, direction) {
+        checkPassing(this, floorNum, direction);
       });
     }
 
@@ -18,14 +18,6 @@
       floors[f].on('up_button_pressed down_button_pressed', function () {
         if (!waiting.includes(level)) {
           waiting.push(level);
-        }
-
-        // if (!elevators[e].loadFactor()) {
-        //   getNextPerson(elevators[e]);
-        // }
-
-        for (let e = 0; e < elevators.length; e++) {
-          // console.log(elevators[e].destinationQueue)
         }
       });
     }
@@ -37,6 +29,22 @@
       } else {
         elevator.goToFloor(0);
       }
+    }
+
+    function goToNextFloor(elevator, floorNum) {
+      const pressedFloors = elevator.getPressedFloors();
+      const nextFloor = pressedFloors.length ? pressedFloors[0] : floorNum;
+      elevator.goToFloor(nextFloor);
+    }
+
+    function checkPassing(elevator, floorNum, direction) {
+      const pressedFloors = elevator.getPressedFloors();
+
+      if (!pressedFloors.includes(floorNum)) {
+        return false;
+      }
+
+      elevator.goToFloor(floorNum);
     }
   },
   update: function(dt, elevators, floors) {
