@@ -4,7 +4,7 @@
 
     for (let e = 0; e < elevators.length; e++) {
       elevators[e].on('idle', function () {
-        this.goToFloor(0);
+        getNextPerson(this);
       }).on('floor_button_pressed', function (floorNum) {
         if (this.loadFactor()) {
           this.goToFloor(floorNum);
@@ -20,10 +20,18 @@
           }
 
           if (!elevators[e].loadFactor()) {
-            elevators[e].goToFloor(waiting[0]);
-            waiting.splice(0, 1);
+            getNextPerson(elevators[e]);
           }
         });
+      }
+    }
+
+    function getNextPerson(elevator) {
+      if (waiting.length) {
+        elevator.goToFloor(waiting[0]);
+        waiting.splice(0, 1);
+      } else {
+        elevator.goToFloor(0);
       }
     }
   },
