@@ -4,8 +4,10 @@
 
     for (let e = 0; e < elevators.length; e++) {
       elevators[e].on('idle', function () {
-        getNextPerson(this);
+        goToNextFloor(this, 0);
       }).on('floor_button_pressed', function (floorNum) {
+        // This doesn't seem to fire always when expected.  Elevators wait for too many people on floor 0, when button should have been pushed?
+        // Possible backup of elevator tasks causing one elevator to load too many people and not delvering everyone in time
         goToNextFloor(this, floorNum);
       }).on('passing_floor', function (floorNum, direction) {
         checkPassing(this, floorNum, direction);
@@ -22,25 +24,22 @@
       });
     }
 
-    function getNextPerson(elevator) {
-      if (waiting.length) {
-        elevator.goToFloor(waiting[0]);
-        waiting.splice(0, 1);
-      } else {
-        elevator.goToFloor(0);
-      }
-    }
-
     function goToNextFloor(elevator, floorNum) {
       const pressedFloors = elevator.getPressedFloors();
       const nextFloor = pressedFloors.length ? pressedFloors[0] : floorNum;
-      elevator.goToFloor(nextFloor);
+
+      if (!nextFloor && waiting.length) {
+        elevator.goToFloor(waiting[0]);
+        waiting.splice(0, 1);
+      } else {
+        elevator.goToFloor(nextFloor);
+      }
     }
 
     function checkPassing(elevator, floorNum, direction) {
       const pressedFloors = elevator.getPressedFloors();
 
-      if (!pressedFloors.includes(floorNum)) {
+      if (!pressedFloors.includes(floorNum) || elevator.loadFactor() > .9) {
         return false;
       }
 
